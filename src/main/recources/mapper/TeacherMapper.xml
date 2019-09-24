@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mybatis sql映射文件 -->
+<!-- namespace：整合到spring之后，要求它的值必须与dao接口的全路径名一致 -->
+<mapper namespace="com.dao.TeacherDao">
+    <!-- 方法名与id对应 -->
+    <!-- 注意：sql后不能带分号 -->
+    <!--
+        1) id属性：方法名与id对应,
+        2) resultType：配置结果类型(包名加类名，如果是基本数据类型就直接填基本数据类型)，
+                 注意：列名要与属性名对应
+    -->
+    <resultMap id="teacherMap" type="com.po.Teacher" >
+        <id property="tid" column="tid"/>
+        <result property="tname" column="tname"/>
+        <collection property="courses" column="tid" select="com.dao.CourseDao.findByTeacherId" fetchType="lazy" />
+    </resultMap>
+
+    <select id="findBytId" resultMap="teacherMap" parameterType="int">
+    select * from a_teacher where tid=#{tid}
+    </select>
+
+
+    <select id="findByCourseId" resultMap="teacherMap" parameterType="int">
+select t.* from a_teacher t ,a_teacher_course tc where t.tid=tc.teacher_id and tc.course_id=#{cid} ;
+
+</select>
+
+</mapper>

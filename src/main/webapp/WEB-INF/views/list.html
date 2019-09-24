@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>学生详情</title>
+    <script src="/day51/static/js/jquery/jquery-1.11.0.js" type="text/javascript" charset="utf-8"></script>
+    <script type="text/javascript">
+        $(function () {
+            //访问展示
+            f(1);
+
+            //首页
+            $(document).on("click", "#firstPage", function () {
+                f(1);
+            });
+
+            //上一页
+            $(document).on("click", "#prePage", function () {
+                var prePage=$("#lblPageNum").html()-1;
+               f(prePage);
+            });
+
+            //下一页
+            $(document).on("click", "#nextPage", function () {
+                var prePage=$("#lblPageNum").html()*1+1;
+                f(prePage);
+            });
+
+            //末页
+            $(document).on("click", "#lastPage", function () {
+                var prePage=$("#lblPages").html()*1;
+                f(prePage);
+            });
+            //查询
+            $(document).on("click", "#btnQuery", function () {
+               f(1);
+            });
+
+        });
+
+
+
+        //数据抓取
+        function f(pageNum) {
+            var orderName=[];
+            var orderValue=[];
+            $.each($("input[name=search]"),function (i,ele) {
+                orderName.push(ele.id);
+                orderValue.push($(ele).val());
+
+            });
+
+            $.ajax({
+                url: "/day51/emp/get",
+                data: { pageSize: 2, pageNum: pageNum,orderName:orderName,orderValue:orderValue},
+                type: "post",
+                traditional: true,
+                dataType: "json",
+                success: function (data) {
+                    var html1 = [];
+                    //生成行数据
+                    if (data.list) {
+                        $.each(data.list, function (i, ele) {
+                            var str = "<tr><td>${eid}</td><td>${ename}</td><td>${job}</td><td>${salary}</td></tr>";
+                            str = str.replace("${eid}", ele.eid);
+                            str = str.replace("${ename}", ele.ename);
+                            str = str.replace("${job}", ele.job);
+                            str = str.replace("${salary}", ele.salary);
+                            html1.push(str);
+                        });
+                    } else {
+                        html1.push('<tr><td colspan="5">没有数据</td>');
+                    }
+                    $("#tbody").html(html1);
+                    //生成页码
+
+                    num(data, pageNum);
+
+                    //    生成当前页数
+                    $("#lblPageNum").html(data.pageNum);
+                    //    总页数
+                    $("#lblPages").html(data.pages);
+                    //    每页页数
+                    $("#lblPageSize").html(data.size);
+                    //    总记录数
+                    $("#lblTotal").html(data.total);
+                }
+            });
+        }
+
+        //生成页码
+        //pageNum是当前页码
+        function num(data, pageNum) {
+            var html2 = [];
+
+            $.each(data.navigatepageNums, function (i, ele) {
+                    var str;
+                    if (pageNum === ele) {
+                        str = "<a >" + ele + "</a>&nbsp;&nbsp;&nbsp;&nbsp;";
+                    } else {
+                        str = "<a href='javascript:f(" + ele + ")' >" + ele + "</a>&nbsp;&nbsp;&nbsp;&nbsp;";
+                    }
+                    html2.push(str);
+                }
+            );
+            $("#pages").html(html2);
+
+        }
+
+
+    </script>
+</head>
+<body>
+<table border="1">
+    <tr>
+        <td>姓名</td>
+        <td><input type="text" id="ename"  name="search"/></td>
+    </tr>
+    <tr>
+        <td>工号</td>
+        <td><input type="text" id="eid" name="search"/></td>
+    </tr>
+    <tr>
+        <td>职业</td>
+        <td><input type="text" id="job" name="search"/></td>
+    </tr>
+    <tr>
+        <td colspan="2" align="right">
+            <input type="button" id="btnQuery" value="查询" />
+        </td>
+    </tr>
+</table>
+<table border="1">
+    <thead>
+    <tr>
+        <th>工号</th>
+        <th>姓名</th>
+        <th>职业</th>
+        <th>薪资</th>
+        <th>操作</th>
+    </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+</table>
+<!--记录当前页码的-->
+当前<label id="lblPageNum"></label>/<label id="lblPages"></label>页，
+每页显示<label id="lblPageSize"></label>条,共<label id="lblTotal"></label>条记录。
+<input type="button" value="首页" id="firstPage"/><input type="button" value="上一页" id="prePage"/>
+<span id="pages"></span><input type="button" value="下一页" id="nextPage"/><input type="button" value="末页" id="lastPage"/>
+<br/>跳转到：<input type="text" placeholder="请输入要跳转的页码" id="start"/> <input type="button" value="跳转" id="skip"/>
+
+</body>
+</html>

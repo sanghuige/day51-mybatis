@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mybatis sql映射文件 -->
+<!-- namespace：整合到spring之后，要求它的值必须与dao接口的全路径名一致 -->
+<mapper namespace="com.dao.EmpDao">
+
+
+
+    <!--
+		eviction：配置缓存策略
+		   LRU(默认)：最近最少使用，移除最长时间不使用的对象
+		   FIFO：先进先出，按对象进入缓存的顺序来移除
+		   SOFT：软引用，移除其于垃圾回收器状态和软引用规则的对象
+		   WEAK：弱引用，更积极地移除基于垃圾收集器状态和弱引用规则的对象
+
+		flushInterval：刷新缓存的时间，指定的是具体的值（不能指定60*100）
+		size：缓存对象的数量，默认是1024
+		readOnly：返回的对象是只读的
+	 -->
+<!--    <cache eviction="FIFO"-->
+<!--           flushInterval="6000" size="512" readOnly="true" />-->
+
+<cache></cache>
+    <cache type="org.mybatis.caches.ehcache.EhcacheCache" />
+    <!-- 方法名与id对应 -->
+    <!-- 注意：sql后不能带分号 -->
+    <!--
+        1) id属性：方法名与id对应,
+        2) resultType：配置结果类型(包名加类名，如果是基本数据类型就直接填基本数据类型)，
+                 注意：列名要与属性名对应
+    -->
+
+
+    <select id="searchAll" resultType="com.po.Emp">
+select * from emp
+    </select>
+
+<!--    -->
+    <select id="getCount" resultType="int" useCache="true">
+select count(*) from emp
+
+    </select>
+
+
+    <select id="findbyCondition" resultType="com.po.Emp" parameterType="com.po.Emp" useCache="true">
+select * from emp where 1=1
+<if test="eid!=null">
+    and eid = #{eid}
+</if>
+        <if test="ename!=null">
+            and ename = #{ename}
+        </if>
+    </select>
+<!-- 分页查询-->
+    <select id="findbyCondition2" resultType="com.po.Emp" parameterType="java.util.Map">
+        select * from emp
+        <where>
+            <if test="eid!=null">
+                and eid = #{eid}
+            </if>
+            <if test="ename!=null">
+                and ename like  #{ename}
+            </if>
+            <if test="job!=null">
+                and job like #{job}
+            </if>
+        </where>
+        <if test="start!=null"  >
+            LIMIT #{start},#{size};
+        </if>
+    </select>
+
+<!--  增加  -->
+<!--  主键不自增  -->
+    <insert id="insert" parameterType="com.po.Emp" >
+        insert into emp(eid,ename,job,salary) values(#{eid},#{ename},#{job},#{salary})
+    </insert>
+<!--   主键自增 -->
+    <insert id="insert2"  parameterType="com.po.Emp" useGeneratedKeys="true" keyColumn="eid" keyProperty="eid">
+         insert into emp (ename,job,salary) values(#{ename},#{job},#{salary})
+    </insert>
+
+
+<!-- 修改   -->
+    <update id="update" parameterType="java.util.Map" >
+        update emp set
+        ename=#{ename},
+        job=#{job},
+        salary=#{salary} where eid=#{eid}
+    </update>
+
+<!--  删除  -->
+    <delete id="delete" parameterType="java.util.Map">
+        delete from emp where 1=1
+        <if test="eid!=null">
+            and eid=#{eid}
+        </if>
+        <if test="ename!=null">
+            and ename=#{eanme}
+        </if>
+        <if test="job!=null">
+            and job=#{job}
+        </if>
+    </delete>
+
+<!--关联映射-->
+<!--  推荐使用 -->
+    <resultMap id="empMap" type="com.po.Emp">
+        <id property="eid" column="eid"/>
+        <result property="ename" column="ename"/>
+        <result property="job" column="job"/>
+        <result property="salary" column="salary"/>
+        <association property="dept" column="deptno" select="com.dao.DeptDao.findById"/>
+    </resultMap>
+
+    <select id="findbyId1" resultMap="empMap" parameterType="int">
+        select * from emp where eid=#{eid}
+    </select>
+<select id="findBydeptno" resultMap="empMap" parameterType="int">
+    select * from emp where deptno=#{did}
+</select>
+<!-- 关联映射手动增加数据-->
+
+<!--type是返回值类型 ， property对应返回值类型属性 ， association 对应关联查询（多表联查）里面的id和property对应相应表的字段 -->
+    <resultMap id="empMap2" type="com.po.Emp">
+        <id property="eid" column="eid"/>
+        <result property="ename" column="ename"/>
+        <result property="job" column="job"/>
+        <result property="salary" column="salary"/>
+
+<!--  -->
+        <association property="dept" column="deptno" javaType="com.po.Dept">
+            <id property="did" column="did"/>
+            <result property="name" column="name"/>
+            <result property="addres" column="addres"/>
+        </association>
+    </resultMap>
+    <select id="findbyId2" resultMap="empMap2" parameterType="int">
+         select e.*,d.did,d.name,d.addres
+        from emp e,dept d
+        where e.deptno=d.did and e.eid=#{eid}
+    </select>
+
+</mapper>
